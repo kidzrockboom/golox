@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 )
 
+var hadError bool = false
+
 func readFileError(err error) {
 	if err != nil {
 		panic(err)
@@ -20,6 +22,11 @@ func runFile(path string) {
 	readFileError(err)
 
 	run(string(data)) //convert []byte to string
+
+	// Indicate an error in the exit code
+	if hadError {
+		os.Exit(65)
+	}
 
 }
 
@@ -45,11 +52,28 @@ func runPrompt() {
 		}
 		run(input)
 
+		// reset flag so it doesnt kill the user session from one error
+		hadError = false
+
 	}
 }
 
 func run(source string) {
-	//todo
+	scanner := Scanner(source)
+	tokens := scanner.scanTokens()
+
+	for _, token := range tokens {
+		println(token)
+	}
+}
+
+func erreur(line int, message string) {
+	report(line, "", message)
+}
+
+func report(line int, where string, message string) {
+	fmt.Errorf("[Line %d] Error %s: %s", line, where, message)
+	hadError = true
 }
 
 func main() {
